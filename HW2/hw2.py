@@ -64,6 +64,7 @@ use_pdb = "no"
 dataset_filename = os.path.join(os.getcwd(),"iris_data.csv")
 work_filename = os.path.join(os.getcwd(),"work_data.csv")
 logconfig_filename = os.path.join(os.getcwd(),"logging.conf")
+plot_filename = os.path.join(os.getcwd(),"k_vs_accuracy.png")
 
 # Data type for data or columns.
 dtype_values = { 0 : np.float, 1 : np.float, 2 : np.float, 3 : np.float, 4 : np.str }
@@ -181,6 +182,7 @@ class hw2(object):
         return self._k_score_total/k_fold
 
     def get_optimal(self, X=pd.DataFrame, y=pd.DataFrame, classifier=None, k_fold=5, indices=True, shuffle=True, random_state=0):
+        """Get the optimal score"""
         if X.empty:
             X = self.X
         if y.empty:
@@ -188,12 +190,18 @@ class hw2(object):
         if classifier == None:
             classifier = KNeighborsClassifier
 
-        scores = { idx+1: self.cross_validate(X, y, classifier(idx+1).fit, k_fold, indices=indices, shuffle=shuffle, random_state=random_state) for idx in xrange(len(self.dataset))}
+        self.optimal_scores = { idx+1: self.cross_validate(X, y, classifier(idx+1).fit, k_fold, indices=indices, shuffle=shuffle, random_state=random_state) for idx in xrange(len(self.dataset))}
 
-        max_scores = max(scores, key=scores.get)
-        max_value = max(scores.values())
+        max_scores = max(self.optimal_scores, key=self.optimal_scores.get)
+        max_value = max(self.optimal_scores.values())
 
         return { max_scores: max_value }
+
+    def plot_optimal_graph(self):
+        plt.title("K vs Accuracy", fontsize=16)
+        plt.plot(self.optimal_scores.keys(), self.optimal_scores.values(), marker="o", c="b")
+        plt.savefig(str(self.options.plot_filename), format="png")
+        plt.show()
 
 def clean_csv(file, workfile, fields):
     with open(file, "rb") as infile, open(workfile, "wb") as outfile:
@@ -234,7 +242,9 @@ def main(argv):
                                         help="Specify the field names for each field of the csv file (Defaults to \"{}\")".format(data_fields))
     parser.add_argument("--indexfield", action="store", dest="index_field_name", default=index_field_name,
                                         help="Specify the class field sub-names for the csv file (Defaults to \"{}\")".format(index_field_name))
-
+    parser.add_argument("-p", "--plotfile", action="store", dest="plot_filename",
+                                            metavar="<FILE>", default=plot_filename,
+                                            help="Specify the plot output file (Defaults to \"{}\")".format(plot_filename))
     args = parser.parse_args()
 
     try:
@@ -256,6 +266,7 @@ def main(argv):
         print(homework.X.take([1,2,4,8,16,32]))
         print("Cross Validation Result: {}".format(homework.cross_validate()))
         print("Optimal value of K (aka Hyperparameter): {}".format(homework.get_optimal()))
+        print(homework.plot_optimal_graph())
 
     except HomeworkException as e:
         print("Error in program:")
