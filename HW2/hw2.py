@@ -200,7 +200,7 @@ class hw2(object):
     def plot_optimal_graph(self):
         plt.title("K vs Accuracy", fontsize=16)
         plt.plot(self.optimal_scores.keys(), self.optimal_scores.values(), marker="o", c="b")
-        plt.savefig(str(self.options.plot_filename), format="png")
+        plt.savefig(self.options.plot_filename, format="png")
         plt.show()
 
 def clean_csv(file, workfile, fields):
